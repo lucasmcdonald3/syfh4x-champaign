@@ -50,10 +50,9 @@ def get_camera_info(picamera):
     rot_vec = np.array(picamera.get("rot_vec"))
     return (camera_mtx, camera_dist, tran_vec, rot_vec)
 
-def get_point(picamera_info, source_data):
-    point = (source_data[0]["x"],source_data[0]["y"])
+def get_point(picamera_info, point2d):
     cam_pos = get_camera_pos(picamera_info)
-    ray = get_vector(point, picamera_info)
+    ray = get_vector(point2d, picamera_info)
     normal = (0,0,1)
     t = -np.dot(cam_pos,normal)/np.dot(ray,normal)
     ground_pos = cam_pos + t*ray
@@ -93,8 +92,9 @@ def main():
                     if type(source_data) is not list:
                         picameras_info[source_address] = source_data
                     else:
-                        point = get_point(picameras_info[source_address], source_data)
-                        print("Final Point", str(point))
+                        for point2d in source_data:
+                            point3d = get_point(picameras_info[source_address], point2d)
+                            print("Final Point", str(point3d))
                 except:
                     continue
 
