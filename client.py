@@ -2,10 +2,20 @@ from socket import socket
 import serverconfig as config
 import numpy as np
 import json
+import cv2
+import imutils
+from imutils.video import VideoStream
+import struct
+import time
+
+def send_msg(target_socket, msg):
+    msg = msg.encode()
+    msg = struct.pack('>I', len(msg)) + msg
+    target_socket.sendall(msg)
 
 def setup():
     #set up socket
-    client_socket = socket.socket()
+    client_socket = socket()
     client_socket.connect((config.IP, config.PORT))
 
     scale_mtx = np.matrix([
@@ -27,13 +37,13 @@ def setup():
         "rot_vec": rot_vec.tolist(),
         "trans_vec": trans_vec.tolist()
     })
-    send_msg(sock, camera_data)
+    send_msg(client_socket, camera_data)
     # set up video stream
     print("[INFO] starting video stream...")
     vs = cv2.VideoCapture(0)
     time.sleep(1.0)
 
-    return (sock, vs)
+    return (client_socket, vs)
 
 def detection(client_socket, vs):
     print("[INFO] loading model...")
@@ -74,8 +84,8 @@ def detection(client_socket, vs):
 
 
 def main():
-    (client_socket, vs) = setup_device()
-    object_tracking(client_socket, vs)
+    (client_socket, vs) = setup()
+    detection(client_socket, vs)
 
 if __name__ == '__main__':
     main()
