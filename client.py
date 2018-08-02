@@ -41,8 +41,10 @@ def setup():
 
 def background_loop(client_socket, vs):
     while True:
-        diff_frame = background.background_subtraction(vs)
-        centers = background.get_centers(diff_frame)
+        difference = background.background_subtraction(vs)
+        cv2.imshow("img", difference)
+        cv2.waitKey(0)
+        centers = background.get_centers(difference)
         data = json.dumps(centers)
         try:
             send_msg(client_socket, data)
