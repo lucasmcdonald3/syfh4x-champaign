@@ -6,6 +6,18 @@ import json
 import cv2
 import numpy as np
 
+from boto import kinesis
+from boto import kinesis 
+from __future__ import division
+import time
+
+def read_kinesis(kinesis, shard_it):
+    out = kinesis.get_records(shard_it, limit=2)
+    for o in out["Records"]:
+        jdat = json.loads(o["Data"])
+        
+
+
 def recv_msg(source_socket):
     buf = source_socket.recv(4096)
     cursor = 0
@@ -43,32 +55,9 @@ def get_camera_pos(picamera_info):
     return np.dot(-rot_mtx.T,trans_vec.reshape(3,1))
 
 def main():
-    server_socket = socket.socket()
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(('', config.PORT))
-    server_socket.listen(2)
-    input_sockets = [server_socket]
-
-    picameras_info = {}
+    kinesis = kinesis.connect_to_region("us-west-2")
+    shard_id = 'shardId-000000000000' #we only have one shard!
+    shard_it = kinesis.get_shard_iterator("BotoDemo", shard_id, "LATEST")["ShardIterator"]
 
     while True:
-        input_fds = select.select(input_sockets, input_sockets, [], 2)[0]
-
-        for fd in input_fds:
-            if fd is server_socket:
-                client_socket, client_address = fd.accept()
-                input_sockets.append(client_socket)
-                print("Connected to ", client_address)
-            else:
-                try:
-                    data = recv_msg(fd)
-                    source_address = fd.getpeername()[0]
-                    source_data = json.loads(data.decode())
-                    if type(source_data) is not list:
-                        print("source_data:", str(source_data))
-                        picameras_info[source_address] = source_data
-                    point = get_point(picameras_info[source_address], source_data)
-                    print(point)
-                    
-                except:
-                    continue
+        read_kinesis(kinesis, shard_it)
