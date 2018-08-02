@@ -11,6 +11,7 @@ def get_boxes(response_dict):
     # sort each box list
     for box_list in boxes.values():
         box_list = sorted(box_list, key=itemgetter(-1))
+    # boxes = dict(key = person_index, value = (Left, Width, Top, Height, Timestamp))
     return boxes
 
 # writes info_dict to file. info_dict has (key = index, value = list of info to store)
