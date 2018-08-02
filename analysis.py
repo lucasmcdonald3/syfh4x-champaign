@@ -34,13 +34,13 @@ def show_heatmap():
         for point in path:
             x.append(eval(point[0])[0])
             y.append(eval(point[0])[1])
-    heatmap, xedges, yedges = np.histogram2d(x, y, bins=(64,64))
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=(20, 20))
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
  
     # Plot heatmap
     plt.clf()
-    plt.title('Pythonspot.com heatmap example')
+    plt.title('Room Heatmap')
     plt.ylabel('y')
     plt.xlabel('x')
-    plt.imshow(heatmap, extent=extent)
+    plt.imshow(heatmap, extent=extent, origin="lower")
     plt.show()
