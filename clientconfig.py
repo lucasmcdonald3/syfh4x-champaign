@@ -1,4 +1,6 @@
-IP = "192.168.1.201"
+import os
+#IP = os.environ.get("SSH_CLIENT", "192.168.1.133")
+IP = "192.168.1.133"
 PORT = 2018
 
 MODEL = "models/MobileNetSSD_deploy.caffemodel"
