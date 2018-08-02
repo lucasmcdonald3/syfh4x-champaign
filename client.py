@@ -7,6 +7,7 @@ import imutils
 from imutils.video import VideoStream
 import struct
 import time
+import background
 
 def send_msg(target_socket, msg):
     msg = msg.encode()
@@ -38,19 +39,14 @@ def setup():
 
     return (client_socket, vs)
 
-def detection(client_socket, vs):
+def background_loop(client_socket, vs):
     while True:
-            # Send this to the server
-        data = json.dumps([{"x":836,"y":1788}])
-        try:
-            send_msg(client_socket, data)
-        except:
-            pass 
-
+        diff_frame = background.background_subtraction(vs)
+        centers = background.get_centers(diff_frame)
 
 def main():
     (client_socket, vs) = setup()
-    detection(client_socket, vs)
+    background_loop(client_socket, vs)
 
 if __name__ == '__main__':
     main()
