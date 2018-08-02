@@ -43,6 +43,11 @@ def background_loop(client_socket, vs):
     while True:
         diff_frame = background.background_subtraction(vs)
         centers = background.get_centers(diff_frame)
+        data = json.dumps(centers)
+        try:
+            send_msg(client_socket, data)
+        except:
+            pass
 
 def main():
     (client_socket, vs) = setup()
