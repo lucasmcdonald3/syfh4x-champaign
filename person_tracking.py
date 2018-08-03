@@ -38,16 +38,17 @@ def get_vector(point):
     cam_mtx, cam_dist, tran_vec, rot_vec = get_camera_info()
     proj = compute_proj_mtx(cam_mtx, rot_vec, tran_vec)
     undist = undistort(point, cam_mtx, cam_dist)
-    proj_inv = np.linalg.pinv(proj)
+    proj_inv = np.linalg.pinv(cam_mtx)
     #backproject using pseudo inverse
     ray = proj_inv*np.matrix([[undist[0][0][0]],[undist[0][0][1]],[1]])
+    #print(ray)
     #convert from homegenous to cartesian
-    return np.array([ray.item(0)/ray.item(3),ray.item(1)/ray.item(3),ray.item(2)/ray.item(3)])
+    return np.array([ray.item(0),ray.item(1),ray.item(2)])
 
 def get_camera_info():
     scale_mtx = np.matrix([
-        [.333333, 0, 0],
-        [0, .3333333, 0],
+        [.5, 0, 0],
+        [0, .5, 0],
         [0, 0, 1]
     ])
     camera_mtx = np.asmatrix(np.loadtxt("calibration/cameramatrix.txt"))
@@ -60,6 +61,7 @@ def get_camera_info():
 def get_point(point2d):
     cam_pos = get_camera_pos()
     ray = get_vector(point2d)
+    ray = (ray.item(0)+cam_pos.item(0),ray.item(1)+cam_pos.item(1),ray.item(2)+cam_pos.item(2))
     normal = (0,0,1)
     t = -np.dot(cam_pos,normal)/np.dot(ray,normal)
     ground_pos = cam_pos + t*ray
