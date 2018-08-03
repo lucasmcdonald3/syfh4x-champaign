@@ -15,14 +15,14 @@ def get_paths():
     return paths
 
 def show_paths():
-    paths = get_paths()
+    paths = get_paths()[0:2]
     colors = cm.rainbow(np.linspace(0, 1, len(paths)))
     for path, c in zip(paths, colors):
         x = []
         y = []
-        for point in path:
-            x.append(eval(point[0])[0])
-            y.append(eval(point[0])[1])
+        for point in path[0]:
+            x.append(eval(point)[0])
+            y.append(eval(point)[1])
         plt.plot(x, y, color=c)
     plt.show()
 
@@ -32,8 +32,8 @@ def show_heatmap():
     y = []
     for path in paths:
         for point in path:
-            x.append(eval(point[0])[0])
-            y.append(eval(point[0])[1])
+            x.append(eval(point)[0])
+            y.append(eval(point)[1])
     heatmap, xedges, yedges = np.histogram2d(x, y, bins=(20, 20))
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
  

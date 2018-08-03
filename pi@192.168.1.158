@@ -1,0 +1,84 @@
+from socket import socket
+import clientconfig as config
+import numpy as np
+import json
+import cv2
+import imutils
+from imutils.video import VideoStream
+import struct
+import time
+import background
+
+def send_msg(target_socket, msg):
+    msg = msg.encode()
+    msg = struct.pack('>I', len(msg)) + msg
+    target_socket.sendall(msg)
+
+def setup():
+    #set up socket
+    client_socket = socket()
+    client_socket.connect((config.IP, config.PORT))
+
+    # load saved camera information
+    camera_mtx = np.asmatrix(np.loadtxt("calibration/cameramatrix.txt"))
+    camera_dist = np.loadtxt("calibration/cameradistortion.txt")
+    rot_vec = np.loadtxt("calibration/rotationvector.txt")
+    trans_vec = np.loadtxt("calibration/translationvector.txt")
+    # send camera info
+    camera_data = json.dumps({
+        "camera_mtx": camera_mtx.tolist(),
+        "camera_dist": camera_dist.tolist(),
+        "rot_vec": rot_vec.tolist(),
+        "trans_vec": trans_vec.tolist()
+    })
+    send_msg(client_socket, camera_data)
+    # set up video stream
+    print("[INFO] starting video stream...")
+    vs = cv2.VideoCapture(0)
+    time.sleep(1.0)
+
+    return (client_socket, vs)
+
+def background_subtraction(vs):
+    # open video
+    cap = cv2.VideoCapture(0)
+    # load stored background image for subtraction
+    bg = cv2.imread("background.jpg")
+    bg = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY)
+    bg = cv2.GaussianBlur(bg, (5, 5), 0)
+    while True:
+        _, frame = cap.read()
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_frame = cv2.GaussianBlur(gray_frame, (5, 5), 0)
+    
+        difference = cv2.absdiff(gray_frame, gray_frame)
+        _, difference = cv2.threshold(difference, 25, 255, cv2.THRESH_BINARY)
+
+    return difference
+
+def get_centers(difference_frame):
+    centers = []
+    ret, thresh = cv2.threshold(difference_frame, 127, 255, 0)
+    (contours, hierarchy) = cv2.findContours(thresh, 1, 2)
+    for contour, hier in zip(contours, hierarchy):
+        (x,y,w,h) = cv2.boundingRect(contour)
+        if w > 40 and h > 40:
+            centers.append(((x+w)/2, y))
+    return centers
+
+def background_loop(client_socket, vs):
+    while True:
+        diff_frame = background_subtraction(vs)
+        centers = get_centers(diff_frame)
+        data = json.dumps(centers)
+        try:
+            send_msg(client_socket, data)
+        except:
+            pass
+
+def main():
+    (client_socket, vs) = setup()
+    background_loop(client_socket, vs)
+
+if __name__ == '__main__':
+    main()
